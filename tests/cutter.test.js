@@ -129,6 +129,14 @@
     expect(on.depth).toBeCloseTo(off.depth, 0.5, "depth (mm):");
   });
 
+  test("One outline around everything changes nothing for a picture that is already one piece", () => {
+    const off = build(circle(), { join: false }), on = build(circle(), { join: true });
+    let different = 0;
+    for (let i = 0; i < off.kind.length; i++) if (off.kind[i] !== on.kind[i]) different++;
+    expect(different).toBe(0, "cells that changed:");
+    expect(on.gaps.reduce((a, v) => a + v, 0)).toBe(0, "gap cells:");
+  });
+
   test("the joined paw cutter is still a closed, printable mesh", async () => {
     const mesh = await checkMesh(CC.stl.build(build(paw(), { join: true })).blob);
     expect(mesh.openEdges).toBe(0, "open edges:");

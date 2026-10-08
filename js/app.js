@@ -143,9 +143,13 @@
 
   $("photo").addEventListener("click", e => {
     if (usesAlpha(readSettings())) return;
-    const rect = e.target.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / rect.width * state.px.W);
-    const y = Math.floor((e.clientY - rect.top) / rect.height * state.px.H);
+    // The picture is scaled to fit inside the canvas box (CSS object-fit), with empty space
+    // around it, so work out where the picture actually sits.
+    const rect = e.target.getBoundingClientRect(), { W, H } = state.px;
+    const scale = Math.min(rect.width / W, rect.height / H);
+    const left = rect.left + (rect.width - W * scale) / 2, top = rect.top + (rect.height - H * scale) / 2;
+    const x = Math.floor((e.clientX - left) / scale), y = Math.floor((e.clientY - top) / scale);
+    if (x < 0 || y < 0 || x >= W || y >= H) return; // clicked the empty space around the picture
     state.clicks.push([x, y]);
     CC.background.removeAt(state.px, state.removed, x, y, +$("tolerance").value);
     refreshMask();

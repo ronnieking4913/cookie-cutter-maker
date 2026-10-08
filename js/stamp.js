@@ -32,7 +32,8 @@ CC.stamp = (() => {
     return m;
   }
 
-  // cut: result of CC.cutter.build. lines: photo-sized mask from lineMask. o: settings in mm.
+  // cut: result of CC.cutter.build (its gaps are pressed in too). lines: photo-sized mask from
+  // lineMask. o: settings in mm.
   function build(cut, lines, W, H, o) {
     const { w, h, t, kind } = cut, res = o.res;
     const outside = new Uint8Array(w * h);
@@ -49,7 +50,8 @@ CC.stamp = (() => {
     for (let i = 0; i < heights.length; i++) {
       if (inset[i] <= plateIn) continue;
       heights[i] = PLATE;
-      if (toLine[i] <= half && inset[i] > lineIn) { heights[i] = top; ridge[i] = 1; }
+      // raised where the picture has a line, or where a gap in the picture was filled in
+      if ((toLine[i] <= half || cut.gaps[i]) && inset[i] > lineIn) { heights[i] = top; ridge[i] = 1; }
     }
     return { o: { res }, w, h, heights, ridge, levels: [0, PLATE, top] };
   }

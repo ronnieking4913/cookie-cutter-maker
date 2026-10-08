@@ -64,6 +64,26 @@
     expect(both.maxX).toBeCloseTo(alone.maxX + 5 + stampWidth, 0.01, "right edge of the stamp (mm):");
   });
 
+  test("the stamp presses in the gaps between a paw's toes and pad", () => {
+    // big pad and four toes, all separate, with white gaps between them
+    const paw = picture(500, 500, g => {
+      g.fillStyle = "#fff"; g.fillRect(0, 0, 500, 500);
+      g.fillStyle = "#6b0f24";
+      g.beginPath(); g.ellipse(250, 340, 130, 110, 0, 0, Math.PI * 2); g.fill();
+      for (const [x, y] of [[90, 190], [190, 110], [310, 110], [410, 190]]) {
+        g.beginPath(); g.ellipse(x, y, 48, 62, 0, 0, Math.PI * 2); g.fill();
+      }
+    });
+    const o = settings({ stampOn: true, join: true });
+    const { px, mask } = maskFor(paw, o);
+    const cut = CC.cutter.build(mask, px.W, px.H, o);
+    const stamp = CC.stamp.build(cut, CC.stamp.lineMask(CC.stamp.edgeStrength(px), mask, o.sensitivity), px.W, px.H, o);
+    // the middle of the gap between the second toe (bottom at y=172) and the pad (top at y=230)
+    const t = cut.t, gx = Math.round(t.pad + (190 - t.x0) * t.k), gy = Math.round(t.pad + (201 - t.y0) * t.k);
+    expect(cut.gaps[gy * cut.w + gx]).toBe(1, "is a gap:");
+    expect(stamp.ridge[gy * stamp.w + gx]).toBe(1, "stamp raised there:");
+  });
+
   test("a plain shape with no inside lines gives a flat plate", () => {
     const o = settings({ stampOn: true });
     const plain = picture(300, 300, g => { g.fillStyle = "#c33"; g.fillRect(50, 50, 200, 200); });

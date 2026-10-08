@@ -11,9 +11,15 @@ CC.cutter = (() => {
     const grid = CC.shape.toGrid(mask, W, H, o), { w, h, t } = grid;
     let m = grid.m;
     if (o.specks) CC.shape.removeSpecks(m, w, h);
+    const picture = m.slice(); // the shape exactly as in the picture, before gaps are filled
     if (o.join) m = CC.shape.joinPieces(m, w, h, MAX_JOIN_GAP / 2 / o.res);
     if (o.fill) CC.shape.fillHoles(m, w, h);
     const d = CC.shape.distance(m, w, h);
+
+    // Gaps: parts of the cookie that were background in the picture (between a paw's toes,
+    // or holes that got filled). The stamp presses these in, so the cookie keeps those details.
+    const gaps = new Uint8Array(w * h);
+    for (let i = 0; i < gaps.length; i++) gaps[i] = m[i] && !picture[i] ? 1 : 0;
 
     const grow = o.grow / o.res, wall = grow + o.wall / o.res, flange = wall + (o.flangeOn ? o.flangeW / o.res : 0);
     const heights = new Float64Array(w * h), kind = new Uint8Array(w * h);
@@ -25,7 +31,7 @@ CC.cutter = (() => {
     // Every distinct height, so the mesh can split side walls at the same levels.
     const levels = [...new Set([0, o.height, ...(o.flangeOn ? [o.flangeH] : [])])].sort((a, b) => a - b);
     // t (where the photo sits on the grid) is kept so the stamp can line up with the cutter.
-    return { o, w, h, t, heights, kind, levels };
+    return { o, w, h, t, heights, kind, levels, gaps };
   }
 
   // Outer size of the printed part in mm.

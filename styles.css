@@ -43,6 +43,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; } /* keep hidden things hidden, even when a class sets display */
 html, body { margin: 0; height: 100%; }
 body {
   background: var(--bg); color: var(--ink);
@@ -156,9 +157,15 @@ button { font: 600 14px var(--font-body); cursor: pointer; border-radius: 8px; }
 .view h3 { margin: 0; font: 600 15px/1.2 var(--font-display); }
 .view footer { display: grid; gap: 4px; }
 
-/* the canvas shrinks to fit the box while keeping its shape */
-.canvas-box { min-height: 0; border-radius: 8px; overflow: hidden; display: grid; place-items: center; padding: 8px; }
-.canvas-box canvas { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; }
+/* The canvas fills the box and its picture is scaled to fit (object-fit), so tall, wide, small
+   and large pictures all fit without changing the layout. Positioned absolutely so the box's
+   size comes only from the layout, never from the picture. app.js accounts for the scaling
+   when you click on the picture. */
+.canvas-box { position: relative; min-height: 0; border-radius: 8px; overflow: hidden; }
+.canvas-box canvas {
+  position: absolute; inset: 8px; display: block;
+  width: calc(100% - 16px); height: calc(100% - 16px); object-fit: contain;
+}
 .checker { background: repeating-conic-gradient(var(--check-a) 0% 25%, var(--check-b) 0% 50%) 0 0 / 20px 20px; }
 .checker canvas { cursor: crosshair; }
 .mat { background: var(--mat); }
@@ -178,7 +185,8 @@ button { font: 600 14px var(--font-body); cursor: pointer; border-radius: 8px; }
   .layout { display: flex; flex-direction: column; }
   .controls { overflow: visible; }
   .step.save { position: static; }
-  .canvas-box canvas { width: 100%; max-height: none; }
+  .canvas-box { padding: 8px; }
+  .canvas-box canvas { position: static; width: 100%; height: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

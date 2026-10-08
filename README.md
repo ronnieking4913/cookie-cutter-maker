@@ -60,7 +60,7 @@ picture → background.js → shape.js → cutter.js ─┬→ stl.js → .stl f
 1. **Background** (`js/background.js`). Floods inward from the picture's edges, removing pixels close in color to the edge. While what's left is still a solid rectangle (for example a colored backdrop inside a white frame), it removes the next layer too. It stops if a layer would remove almost everything, which means that layer is the cookie itself.
 2. **Shape** (`js/shape.js`). Removes thin halos and specks, crops to the shape, and scales it onto a millimeter grid.
 3. **Cutter** (`js/cutter.js`). Measures every grid cell's distance from the shape (exact Euclidean distance transform). Cells within the wall distance become wall; cells within the flange distance become flange.
-4. **Stamp** (`js/stamp.js`). Finds detail lines where the color changes sharply inside the shape (Sobel edge detection), thickens them to the line width, and raises them on a plate inset from the cutter wall.
+4. **Stamp** (`js/stamp.js`). Finds detail lines where the color changes sharply inside the shape (Sobel edge detection) and thickens them to the line width. It also raises the gaps that were filled in to make one outline (like the spaces between a paw's toes and pad), so the cookie keeps those details. Everything sits on a plate inset from the cutter wall.
 5. **STL** (`js/stl.js`). Turns each raised cell into a block, keeps only the outside faces, mirrors left to right, and writes a binary STL. The mesh is closed, and every face points outwards.
 
 ## Project layout
@@ -89,7 +89,7 @@ Double-click `tests/index.html`. Each test shows ✓ or ✗, with a total at the
 | `tests/runner.js` | A small test runner (`test`, `expect(...).toBe`, `toBeCloseTo`, …) plus shared helpers |
 | `tests/background.test.js` | Frame and backdrop removal, rectangular cookies kept, transparency, click to remove |
 | `tests/cutter.test.js` | Size, wall and flange thickness and height, flange off, grow outline, one outline around everything, closed mesh, mirroring, empty pictures |
-| `tests/stamp.test.js` | Detail lines found, plate fits inside the cutter, plate and line heights, alignment after mirroring, both objects in one STL |
+| `tests/stamp.test.js` | Detail lines found, gaps pressed in, plate fits inside the cutter, plate and line heights, alignment after mirroring, both objects in one STL |
 
 The tests draw their own pictures. Chrome and Edge won't let a page opened from disk read the pixels of image files beside it, so real photos are checked by hand in the app.
 
