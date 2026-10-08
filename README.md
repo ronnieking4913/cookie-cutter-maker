@@ -6,7 +6,7 @@ It replaces a manual workflow of tracing the outline in GIMP (alpha to selection
 
 ## Using it
 
-Double-click `index.html` to open it in Edge or Chrome.
+Double-click `Cookie Cutter Maker.html` to open it in Edge or Chrome.
 
 1. **Picture.** Choose or drag in a picture (PNG, JPG, WEBP or AVIF). The background is removed automatically and the preview shows what was kept over a checkerboard. Click any leftover background to remove it, or use **Reset background** to start over.
 2. **Size.** Set the longest side of the cookie and the cutter's height, wall and flange.
@@ -66,7 +66,7 @@ picture → background.js → shape.js → cutter.js ─┬→ stl.js → .stl f
 
 | File | Purpose |
 |---|---|
-| `index.html` | The page and its controls |
+| `Cookie Cutter Maker.html` | The page and its controls (open this to use the app) |
 | `styles.css` | The look, with light and dark themes |
 | `js/background.js` | Reads the picture and removes the background |
 | `js/shape.js` | Cleans up the shape and puts it on the millimeter grid |
@@ -77,7 +77,7 @@ picture → background.js → shape.js → cutter.js ─┬→ stl.js → .stl f
 | `js/app.js` | Connects the page's controls to the steps above |
 | `tests/` | Test runner and tests |
 
-The scripts are plain `<script>` files that share one global object, `CC`, and load in order in `index.html`. Browsers block JavaScript modules in a page opened by double-clicking, so this keeps the app working without a web server or build step.
+The scripts are plain `<script>` files that share one global object, `CC`, and load in order in `Cookie Cutter Maker.html`. Browsers block JavaScript modules in a page opened by double-clicking, so this keeps the app working without a web server or build step.
 
 ## Tests
 
