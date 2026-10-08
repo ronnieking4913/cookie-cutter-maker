@@ -84,6 +84,42 @@
     expect(stamp.ridge[gy * stamp.w + gx]).toBe(1, "stamp raised there:");
   });
 
+  test("the stamp has no tiny raised specks (nothing smaller than 4 mm²)", () => {
+    // A paw with ragged, fur-like toe edges leaves scraps of gap along the cookie's edge.
+    const ragged = picture(500, 500, g => {
+      g.fillStyle = "#fff"; g.fillRect(0, 0, 500, 500);
+      g.fillStyle = "#6b0f24";
+      const blob = (cx, cy, rx, ry) => {
+        g.beginPath();
+        for (let a = 0; a <= 360; a += 6) {
+          const r = 1 + (a % 12 === 0 ? 0.08 : 0); // jagged edge
+          const p = [cx + rx * r * Math.cos(a * Math.PI / 180), cy + ry * r * Math.sin(a * Math.PI / 180)];
+          a ? g.lineTo(...p) : g.moveTo(...p);
+        }
+        g.fill();
+      };
+      blob(250, 340, 130, 110);
+      for (const [x, y] of [[95, 190], [190, 112], [310, 112], [405, 190]]) blob(x, y, 50, 64);
+    });
+    const o = settings({ stampOn: true, join: true });
+    const { px, mask } = maskFor(ragged, o);
+    const cut = CC.cutter.build(mask, px.W, px.H, o);
+    const stamp = CC.stamp.build(cut, CC.stamp.lineMask(CC.stamp.edgeStrength(px), mask, o.sensitivity), px.W, px.H, o);
+    const seen = new Uint8Array(stamp.ridge.length), cellArea = o.res * o.res;
+    let smallest = Infinity;
+    for (let s = 0; s < seen.length; s++) {
+      if (!stamp.ridge[s] || seen[s]) continue;
+      let n = 0; const q = [s]; seen[s] = 1;
+      while (q.length) {
+        const i = q.pop(), x = i % stamp.w; n++;
+        for (const j of [x > 0 ? i - 1 : -1, x < stamp.w - 1 ? i + 1 : -1, i - stamp.w, i + stamp.w])
+          if (j >= 0 && j < seen.length && stamp.ridge[j] && !seen[j]) { seen[j] = 1; q.push(j); }
+      }
+      smallest = Math.min(smallest, n * cellArea);
+    }
+    expect(smallest >= 4).toBe(true, `smallest raised piece is ${smallest.toFixed(2)} mm²:`);
+  });
+
   test("a plain shape with no inside lines gives a flat plate", () => {
     const o = settings({ stampOn: true });
     const plain = picture(300, 300, g => { g.fillStyle = "#c33"; g.fillRect(50, 50, 200, 200); });

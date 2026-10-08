@@ -45,10 +45,7 @@
         <label class="switch"><span>One outline around everything</span><input type="checkbox" role="switch" id="join" checked></label>
         <label class="switch"><span>Fill gaps inside the shape</span><input type="checkbox" role="switch" id="fill" checked></label>
         <label class="switch"><span>Ignore small specks</span><input type="checkbox" role="switch" id="specks" checked></label>
-        <div class="grid2">
-          <label class="field" for="smooth"><span>Edge smoothing</span><input type="range" id="smooth" min="0" max="8" value="2"></label>
-          <button class="ghost" id="resetBg" type="button">Reset background</button>
-        </div>
+        <label class="field" for="smooth"><span>Edge smoothing</span><input type="range" id="smooth" min="0" max="8" value="2"></label>
       </div>
     </section>
 
@@ -89,7 +86,6 @@
 
     <section class="step save">
       <button class="primary" id="save" type="button">Download STL</button>
-      <button class="ghost wide" id="savePicture" type="button" title="Saves the picture with the background removed, as a PNG. Load it again later to get the same outline.">Save edited picture (PNG)</button>
       <p class="saved" id="saved"></p>
       <p class="err" id="err" role="alert" hidden></p>
     </section>
@@ -97,7 +93,15 @@
 
   <!-- Previews -->
   <section class="view">
-    <header><h3>Picture</h3><p id="photoHint" class="hint"></p></header>
+    <header>
+      <h3>Picture</h3>
+      <div class="toolbar">
+        <button class="ghost small" id="undo" type="button" title="Undo the last click or drag (also right-click on the picture, or Ctrl+Z)">↶ Undo</button>
+        <button class="ghost small" id="resetBg" type="button" title="Undo all clicks and drags">Reset background</button>
+        <button class="ghost small" id="savePicture" type="button" title="Saves the picture with the background removed, as a PNG. Load it again later to get the same outline.">Save picture</button>
+      </div>
+      <p id="photoHint" class="hint full"></p>
+    </header>
     <div class="canvas-box checker"><canvas id="photo"></canvas></div>
   </section>
 

@@ -35,6 +35,8 @@
     if (o.specks) CC.shape.removeSpecks(m, px.W, px.H);
     state.mask = m;
     CC.preview.photo($("photo"), px, m);
+    // Undo and Reset only do something after a click or drag on the picture
+    $("undo").disabled = $("resetBg").disabled = !state.strokes.length || usesAlpha(o);
   }
 
   // ---- background (re-run when the photo, mode or tolerance changes) ----
@@ -213,6 +215,7 @@
       e.preventDefault(); undo();
     }
   });
+  $("undo").addEventListener("click", undo);
   $("resetBg").addEventListener("click", () => { state.strokes = []; updateBackground(); });
 
   const drop = $("drop");

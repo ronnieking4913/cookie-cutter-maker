@@ -7,6 +7,7 @@ CC.stamp = (() => {
   const GAP = 0.6;        // space between plate and cutter wall so the stamp slides in, mm
   const EDGE_MARGIN = 1;  // keep lines this far in from the plate edge, mm
   const MIN_LINE_AREA = 1; // ignore line bits smaller than this, mm²
+  const MIN_RAISED_AREA = 4; // after trimming back from the edge, drop raised specks smaller than this, mm²
 
   // How sharply the color changes at each photo pixel (Sobel filter, strongest of R, G, B).
   // Computed once per photo.
@@ -55,6 +56,10 @@ CC.stamp = (() => {
       // raised where the picture has a line, or where a gap in the picture was filled in
       if ((toLine[i] <= half || gaps[i]) && inset[i] > lineIn) { heights[i] = top; ridge[i] = 1; }
     }
+    // Trimming back from the edge can leave tiny scraps (like the ends of a paw's toe gaps).
+    // They're too small to press anything useful, so flatten them back into the plate.
+    CC.shape.removeSpecks(ridge, w, h, MIN_RAISED_AREA / (res * res));
+    for (let i = 0; i < heights.length; i++) if (heights[i] === top && !ridge[i]) heights[i] = PLATE;
     return { o: { res }, w, h, heights, ridge, levels: [0, PLATE, top] };
   }
 

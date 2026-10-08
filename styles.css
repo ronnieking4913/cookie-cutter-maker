@@ -139,7 +139,10 @@ button { font: 600 14px var(--font-body); cursor: pointer; border-radius: 8px; }
 .primary:disabled { opacity: .5; cursor: default; }
 .ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); height: 32px; padding: 0 10px; font-size: 13px; }
 .ghost:hover { border-color: var(--ink); }
-.ghost.wide { width: 100%; }
+.ghost.small { height: 28px; padding: 0 9px; font-size: 12px; }
+.ghost:disabled { opacity: .45; cursor: default; border-color: var(--line); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 6px; }
+.view header .full { flex-basis: 100%; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 

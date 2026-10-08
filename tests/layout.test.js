@@ -38,11 +38,38 @@
         </section>`);
       const view = s.querySelector(".view"), box = s.querySelector(".canvas-box").getBoundingClientRect();
       const canvas = s.querySelector("canvas").getBoundingClientRect(), v = view.getBoundingClientRect();
+      if (matchMedia("(max-width: 760px)").matches) {
+        // Narrow window (phone): the page scrolls on purpose, so the picture only has to fit the width.
+        expect(canvas.right <= box.right && view.scrollWidth <= view.clientWidth).toBe(true, "picture fits the width:");
+        return;
+      }
       expect(view.scrollHeight <= view.clientHeight).toBe(true, "panel doesn't overflow:");
       expect(box.bottom <= v.bottom && canvas.bottom <= box.bottom && canvas.right <= box.right).toBe(true, "picture inside its box:");
       expect(getComputedStyle(s.querySelector("canvas")).objectFit).toBe("contain", "picture keeps its shape (object-fit):");
     });
   }
+
+  test("the picture's Undo / Reset / Save buttons fit the panel, even when it's narrow", () => {
+    for (const width of [470, 300]) {
+      const s = build(`
+        <section class="view" style="height:400px;width:${width}px">
+          <header>
+            <h3>Picture</h3>
+            <div class="toolbar">
+              <button class="ghost small" type="button">↶ Undo</button>
+              <button class="ghost small" type="button">Reset background</button>
+              <button class="ghost small" type="button">Save picture</button>
+            </div>
+            <p class="hint full">Click or drag over anything that's still background to remove it. Right-click to undo.</p>
+          </header>
+          <div class="canvas-box checker"><canvas width="400" height="400"></canvas></div>
+        </section>`);
+      const view = s.querySelector(".view"), v = view.getBoundingClientRect();
+      for (const b of s.querySelectorAll("button"))
+        expect(b.getBoundingClientRect().right <= v.right).toBe(true, `"${b.textContent}" visible at ${width}px:`);
+      expect(view.scrollWidth <= view.clientWidth).toBe(true, `no sideways overflow at ${width}px:`);
+    }
+  });
 
   test("on/off settings are drawn as toggle switches", () => {
     const s = build(`<label class="switch"><span>Rim to push on</span><input type="checkbox" role="switch" checked></label>`);

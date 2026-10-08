@@ -8,10 +8,10 @@ It replaces a manual workflow of tracing the outline in GIMP (alpha to selection
 
 Double-click `Cookie Cutter Maker.html` to open it in Edge or Chrome.
 
-1. **Picture.** Choose or drag in a picture (PNG, JPG, WEBP or AVIF). The background is removed automatically and the preview shows what was kept over a checkerboard. Click leftover background to remove it, or click and drag across several pieces (like writing) to remove them in one go. **Right-click** (or Ctrl+Z) undoes the last click or drag; **Reset background** starts over.
+1. **Picture.** Choose or drag in a picture (PNG, JPG, WEBP or AVIF). The background is removed automatically and the preview shows what was kept over a checkerboard. Click leftover background to remove it, or click and drag across several pieces (like writing) to remove them in one go. The buttons above the picture: **Undo** the last click or drag (also right-click, or Ctrl+Z), **Reset background** to start over, and **Save picture** to keep the cleaned-up picture as a PNG with a transparent background; load it again later to get the same outline without redoing the cleanup.
 2. **Size.** Set the longest side of the cookie and the cutter's height, wall and rim.
 3. **Stamp** (optional). Adds a plate with raised lines that prints the picture's inside details into the dough.
-4. **Save.** **Download STL** saves `<name>-cutter.stl`, or `<name>-cutter-and-stamp.stl` with the stamp as a second object beside the cutter. **Save edited picture (PNG)** saves the cleaned-up picture with a transparent background; load it again later to get the same outline without redoing the cleanup.
+4. **Save.** **Download STL** saves `<name>-cutter.stl`, or `<name>-cutter-and-stamp.stl` with the stamp as a second object beside the cutter.
 
 ### Printing
 
@@ -48,7 +48,7 @@ Background removal works by color, like GIMP's magic wand. Where part of the cha
 | Stamp: detail sensitivity | 50 | Higher picks up fainter lines (1–100) |
 | Stamp: line width / height | 1.2 mm / 2 mm | Size of the raised lines on the stamp |
 
-Fixed stamp values (in `js/stamp.js`): 3 mm plate, 0.6 mm gap to the cutter wall, lines kept 1 mm in from the plate edge. The two objects sit 5 mm apart in the STL (in `js/stl.js`).
+Fixed stamp values (in `js/stamp.js`): 3 mm plate, 0.6 mm gap to the cutter wall, lines kept 1 mm in from the plate edge, and raised specks smaller than 4 mm² flattened. The two objects sit 5 mm apart in the STL (in `js/stl.js`).
 
 ## How it works
 
@@ -90,8 +90,8 @@ Double-click `tests/index.html`. Each test shows ✓ or ✗, with a total at the
 | `tests/background.test.js` | Frame and backdrop removal, rectangular cookies kept, transparency, click to remove |
 | `tests/editing.test.js` | Drag to remove several pieces, quick drags, undo, replaying edits, saved picture loads back the same |
 | `tests/cutter.test.js` | Size, wall and rim thickness and height, rim off, grow outline, one outline around everything, closed mesh, mirroring, empty pictures |
-| `tests/stamp.test.js` | Detail lines found, gaps pressed in, plate fits inside the cutter, plate and line heights, alignment after mirroring, both objects in one STL |
-| `tests/layout.test.js` | Long file names, hidden settings, tall/wide/small pictures fitting their panel, toggle switches (builds pieces of the page with the real stylesheet) |
+| `tests/stamp.test.js` | Detail lines found, gaps pressed in, no tiny specks, plate fits inside the cutter, plate and line heights, alignment after mirroring, both objects in one STL |
+| `tests/layout.test.js` | Long file names, hidden settings, tall/wide/small pictures fitting their panel, picture buttons fitting, toggle switches (builds pieces of the page with the real stylesheet) |
 
 The tests draw their own pictures. Chrome and Edge won't let a page opened from disk read the pixels of image files beside it, so real photos are checked by hand in the app.
 
