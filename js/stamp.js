@@ -43,6 +43,8 @@ CC.stamp = (() => {
     const grid = CC.shape.resample(lines, W, H, t, 0, 60);
     CC.shape.removeSpecks(grid, w, h, MIN_LINE_AREA / (res * res));
     const toLine = CC.shape.distance(grid, w, h);
+    const gaps = cut.gaps.slice(); // filled-in gaps, minus crumbs too small to press in
+    CC.shape.removeSpecks(gaps, w, h, MIN_LINE_AREA / (res * res));
 
     const half = o.lineW / 2 / res, plateIn = GAP / res, lineIn = (GAP + EDGE_MARGIN) / res;
     const top = PLATE + o.lineH;
@@ -51,7 +53,7 @@ CC.stamp = (() => {
       if (inset[i] <= plateIn) continue;
       heights[i] = PLATE;
       // raised where the picture has a line, or where a gap in the picture was filled in
-      if ((toLine[i] <= half || cut.gaps[i]) && inset[i] > lineIn) { heights[i] = top; ridge[i] = 1; }
+      if ((toLine[i] <= half || gaps[i]) && inset[i] > lineIn) { heights[i] = top; ridge[i] = 1; }
     }
     return { o: { res }, w, h, heights, ridge, levels: [0, PLATE, top] };
   }

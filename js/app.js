@@ -7,7 +7,8 @@
     px: null,        // photo pixels (CC.background.readPixels)
     strength: null,  // how sharp the color change is at each pixel, for stamp lines
     removed: null,   // 1 = background pixel
-    clicks: [],      // spots the user clicked to remove, replayed when tolerance changes
+    strokes: [],     // each click or drag on the picture: a list of [x, y] spots removed.
+                     // Replayed when tolerance changes; right-click undoes the last one.
     mask: null,      // 1 = cookie shape
     result: null,    // latest cutter (CC.cutter.build)
     stamp: null,     // latest stamp (CC.stamp.build), or null when the stamp is off
@@ -42,12 +43,13 @@
     if (usesAlpha(o)) state.removed = new Uint8Array(px.W * px.H);
     else {
       state.removed = CC.background.autoRemove(px, o.tolerance);
-      for (const [x, y] of state.clicks) CC.background.removeAt(px, state.removed, x, y, o.tolerance);
+      for (const stroke of state.strokes)
+        for (const [x, y] of stroke) CC.background.removeAt(px, state.removed, x, y, o.tolerance);
     }
     refreshMask();
     $("photoHint").textContent = usesAlpha(o)
       ? "Using the picture's transparent background."
-      : "Click anything that's still background to remove it.";
+      : "Click or drag over anything that's still background to remove it. Right-click to undo.";
     updateCutter();
   }
 
@@ -87,7 +89,7 @@
   function loadImage(img, name) {
     state.px = CC.background.readPixels(img);
     state.strength = null;
-    state.name = name; state.clicks = [];
+    state.name = name; state.strokes = [];
     updateBackground();
   }
 
@@ -141,21 +143,72 @@
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change",
     () => state.result && CC.preview.cutter($("cutter"), state.result, state.stamp));
 
-  $("photo").addEventListener("click", e => {
-    if (usesAlpha(readSettings())) return;
-    // The picture is scaled to fit inside the canvas box (CSS object-fit), with empty space
-    // around it, so work out where the picture actually sits.
-    const rect = e.target.getBoundingClientRect(), { W, H } = state.px;
+  // ---- removing background by clicking or dragging on the picture ----
+  const photo = $("photo");
+
+  // Where the pointer is in picture pixels, or null over the empty space around the picture.
+  // The picture is scaled to fit inside the canvas box (CSS object-fit), so work out where it sits.
+  function pictureSpot(e) {
+    const rect = photo.getBoundingClientRect(), { W, H } = state.px;
     const scale = Math.min(rect.width / W, rect.height / H);
     const left = rect.left + (rect.width - W * scale) / 2, top = rect.top + (rect.height - H * scale) / 2;
     const x = Math.floor((e.clientX - left) / scale), y = Math.floor((e.clientY - top) / scale);
-    if (x < 0 || y < 0 || x >= W || y >= H) return; // clicked the empty space around the picture
-    state.clicks.push([x, y]);
-    CC.background.removeAt(state.px, state.removed, x, y, +$("tolerance").value);
+    return x < 0 || y < 0 || x >= state.px.W || y >= state.px.H ? null : [x, y];
+  }
+
+  let stroke = null, last = null, frame = 0;
+
+  // Remove whatever is under the pointer, plus every spot along the way since the last
+  // position, so a quick drag doesn't skip pieces.
+  function removeAlong(e) {
+    const spot = pictureSpot(e);
+    if (!spot) { last = null; return; }
+    const from = last || spot, steps = Math.max(1, Math.ceil(Math.hypot(spot[0] - from[0], spot[1] - from[1]) / 2));
+    for (let s = 1; s <= steps; s++) {
+      const x = Math.round(from[0] + (spot[0] - from[0]) * s / steps), y = Math.round(from[1] + (spot[1] - from[1]) * s / steps);
+      if (state.removed[y * state.px.W + x]) continue; // already background
+      stroke.push([x, y]);
+      CC.background.removeAt(state.px, state.removed, x, y, +$("tolerance").value);
+    }
+    last = spot;
+    // quick preview while dragging; the full clean-up and cutter happen when the button is released
+    if (!frame) frame = requestAnimationFrame(() => {
+      frame = 0;
+      CC.preview.photo(photo, state.px, CC.background.shapeMask(state.px, state.removed, false));
+    });
+  }
+
+  photo.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || usesAlpha(readSettings())) return;
+    try { photo.setPointerCapture(e.pointerId); } catch { /* keep going without capture */ }
+    stroke = []; last = null;
+    removeAlong(e);
+  });
+  photo.addEventListener("pointermove", e => { if (stroke) removeAlong(e); });
+  const finishStroke = () => {
+    if (!stroke) return;
+    if (stroke.length) state.strokes.push(stroke);
+    stroke = null; last = null;
+    if (frame) { cancelAnimationFrame(frame); frame = 0; } // don't let a late quick preview cover the final one
     refreshMask();
     updateCutter();
+  };
+  photo.addEventListener("pointerup", finishStroke);
+  photo.addEventListener("pointercancel", finishStroke);
+
+  // Undo the last click or drag: right-click on the picture, or Ctrl+Z.
+  function undo() {
+    if (!state.strokes.length || usesAlpha(readSettings())) return;
+    state.strokes.pop();
+    updateBackground();
+  }
+  photo.addEventListener("contextmenu", e => { e.preventDefault(); undo(); });
+  document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !/INPUT|SELECT/.test(document.activeElement.tagName)) {
+      e.preventDefault(); undo();
+    }
   });
-  $("resetBg").addEventListener("click", () => { state.clicks = []; updateBackground(); });
+  $("resetBg").addEventListener("click", () => { state.strokes = []; updateBackground(); });
 
   const drop = $("drop");
   drop.addEventListener("click", () => $("file").click());

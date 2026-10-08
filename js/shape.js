@@ -115,11 +115,13 @@ CC.shape = (() => {
     return out;
   }
 
-  // Join separate pieces (like a paw's toes and pad) into one outline, using the
-  // smallest closing that does it. Gives up at maxCells and returns the best it found.
-  function joinPieces(m, w, h, maxCells) {
-    if (countPieces(m, w, h) <= 1) return m;
-    let lo = 1, hi = Math.max(1, Math.round(maxCells)), best = close(m, w, h, hi);
+  // Join separate pieces (like a paw's toes and pad) into one outline: fill every gap
+  // narrower than about 2 × minCells, and if that still leaves separate pieces, use the
+  // smallest bigger closing that connects them (up to maxCells).
+  function joinPieces(m, w, h, minCells, maxCells) {
+    const first = close(m, w, h, Math.max(1, Math.round(minCells)));
+    if (countPieces(first, w, h) <= 1) return first;
+    let lo = Math.max(1, Math.round(minCells)), hi = Math.max(lo, Math.round(maxCells)), best = close(m, w, h, hi);
     if (countPieces(best, w, h) > 1) return best;
     while (lo < hi) {
       const mid = (lo + hi) >> 1, joined = close(m, w, h, mid);

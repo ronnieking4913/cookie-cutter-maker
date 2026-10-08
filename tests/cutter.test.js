@@ -129,6 +129,21 @@
     expect(on.depth).toBeCloseTo(off.depth, 0.5, "depth (mm):");
   });
 
+  test("One outline around everything fills the whole gap, even where pieces nearly touch", () => {
+    // Two circles 2 px apart: at cookie size they touch at one point, which used to leave a
+    // deep notch on either side of that point (the Bowles paw problem).
+    const nearlyTouching = () => picture(520, 260, g => {
+      g.fillStyle = "#c33";
+      g.beginPath(); g.arc(130, 130, 126, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.arc(388, 130, 126, 0, Math.PI * 2); g.fill();
+    });
+    const r = build(nearlyTouching(), { join: true });
+    // a spot in the notch, 3 mm above the point where the circles meet
+    const t = r.t, x = Math.round(t.pad + (259 - t.x0) * t.k), y = Math.round(t.pad + (130 - t.y0) * t.k - 3 / r.o.res);
+    expect(r.kind[y * r.w + x]).toBe(CC.cutter.KIND.COOKIE, "notch is part of the cookie:");
+    expect(cookiePieces(r)).toBe(1, "pieces:");
+  });
+
   test("One outline around everything changes nothing for a picture that is already one piece", () => {
     const off = build(circle(), { join: false }), on = build(circle(), { join: true });
     let different = 0;

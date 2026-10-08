@@ -3,7 +3,9 @@ window.CC = window.CC || {};
 
 CC.cutter = (() => {
   const KIND = { NONE: 0, COOKIE: 1, WALL: 2, FLANGE: 3 };
-  const MAX_JOIN_GAP = 30; // widest gap "One outline around everything" will bridge, mm
+  // "One outline around everything" (only when the picture has more than one piece):
+  const FILL_GAP = 6;       // gaps between pieces up to this wide are always filled, mm
+  const MAX_JOIN_GAP = 30;  // pieces further apart than this stay separate, mm
 
   // mask: cleaned shape mask (full photo size, W x H). o: settings in mm.
   function build(mask, W, H, o) {
@@ -12,7 +14,10 @@ CC.cutter = (() => {
     let m = grid.m;
     if (o.specks) CC.shape.removeSpecks(m, w, h);
     const picture = m.slice(); // the shape exactly as in the picture, before gaps are filled
-    if (o.join) m = CC.shape.joinPieces(m, w, h, MAX_JOIN_GAP / 2 / o.res);
+    // Count pieces in the full-size picture: at cookie size, nearby pieces can touch at a
+    // point and look like one piece while still leaving deep gaps between them.
+    if (o.join && CC.shape.countPieces(mask, W, H) > 1)
+      m = CC.shape.joinPieces(m, w, h, FILL_GAP / 2 / o.res, MAX_JOIN_GAP / 2 / o.res);
     if (o.fill) CC.shape.fillHoles(m, w, h);
     const d = CC.shape.distance(m, w, h);
 

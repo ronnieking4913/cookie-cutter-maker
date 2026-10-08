@@ -8,7 +8,7 @@ It replaces a manual workflow of tracing the outline in GIMP (alpha to selection
 
 Double-click `Cookie Cutter Maker.html` to open it in Edge or Chrome.
 
-1. **Picture.** Choose or drag in a picture (PNG, JPG, WEBP or AVIF). The background is removed automatically and the preview shows what was kept over a checkerboard. Click any leftover background to remove it, or use **Reset background** to start over.
+1. **Picture.** Choose or drag in a picture (PNG, JPG, WEBP or AVIF). The background is removed automatically and the preview shows what was kept over a checkerboard. Click leftover background to remove it, or click and drag across several pieces (like writing) to remove them in one go. **Right-click** (or Ctrl+Z) undoes the last click or drag; **Reset background** starts over.
 2. **Size.** Set the longest side of the cookie and the cutter's height, wall and flange.
 3. **Stamp** (optional). Adds a plate with raised lines that prints the picture's inside details into the dough.
 4. **Save.** **Download STL** saves `<name>-cutter.stl`, or `<name>-cutter-and-stamp.stl` with the stamp as a second object beside the cutter.
@@ -35,7 +35,7 @@ Background removal works by color, like GIMP's magic wand. Where part of the cha
 |---|---|---|
 | Background | Automatic | Uses the picture's transparency if it has any, otherwise removes the background by color |
 | Color tolerance | 40 | How different a color can be and still count as background (5–120) |
-| One outline around everything | On | Joins separate pieces (like a paw's toes and pad) into one cookie, filling only the gaps without making it bigger. Turn off for separate cookies, like letters |
+| One outline around everything | On | When the picture has separate pieces (like a paw's toes and pad), fills the gaps between them, up to 6 mm wide, so the cutter follows the outside of the whole shape without making it bigger. With the stamp on, the filled gaps are pressed into the dough. Pictures that are already one piece are left alone. Turn off for separate cookies, like letters |
 | Fill gaps inside the shape | On | Treats anything enclosed by the outline as part of the cookie |
 | Ignore small specks | On | Drops stray bits smaller than 1% of the main shape |
 | Edge smoothing | 2 | Rounds off jagged edges (0–8) |
