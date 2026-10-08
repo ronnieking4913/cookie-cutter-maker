@@ -84,6 +84,50 @@ CC.shape = (() => {
     for (let i = 0; i < m.length; i++) if (m[i] && sizes[lab[i]] < min) m[i] = 0;
   }
 
+  function countPieces(m, w, h) {
+    const seen = new Uint8Array(w * h), stack = [];
+    let n = 0;
+    for (let s = 0; s < m.length; s++) {
+      if (!m[s] || seen[s]) continue;
+      n++; seen[s] = 1; stack.push(s);
+      while (stack.length) {
+        const i = stack.pop(), x = i % w, y = (i / w) | 0;
+        for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1])
+          if (j >= 0 && m[j] && !seen[j]) { seen[j] = 1; stack.push(j); }
+      }
+    }
+    return n;
+  }
+
+  // Morphological closing with a round brush of radius r cells: grow by r, then shrink back by r.
+  // Fills gaps narrower than about 2r without making the outside of the shape any bigger.
+  function close(m, w, h, r) {
+    const grown = new Uint8Array(w * h), outside = new Uint8Array(w * h);
+    const d = distance(m, w, h);
+    for (let i = 0; i < m.length; i++) grown[i] = d[i] <= r ? 1 : 0;
+    for (let i = 0; i < m.length; i++) {
+      const x = i % w, y = (i / w) | 0;
+      // treat the grid's border as outside, so the shrink step works near the edges too
+      outside[i] = !grown[i] || x === 0 || y === 0 || x === w - 1 || y === h - 1 ? 1 : 0;
+    }
+    const back = distance(outside, w, h), out = new Uint8Array(w * h);
+    for (let i = 0; i < m.length; i++) out[i] = m[i] || back[i] > r ? 1 : 0;
+    return out;
+  }
+
+  // Join separate pieces (like a paw's toes and pad) into one outline, using the
+  // smallest closing that does it. Gives up at maxCells and returns the best it found.
+  function joinPieces(m, w, h, maxCells) {
+    if (countPieces(m, w, h) <= 1) return m;
+    let lo = 1, hi = Math.max(1, Math.round(maxCells)), best = close(m, w, h, hi);
+    if (countPieces(best, w, h) > 1) return best;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1, joined = close(m, w, h, mid);
+      if (countPieces(joined, w, h) <= 1) { hi = mid; best = joined; } else lo = mid + 1;
+    }
+    return best;
+  }
+
   // Anything enclosed by the shape becomes part of the shape.
   function fillHoles(m, w, h) {
     const seen = new Uint8Array(w * h), stack = [];
@@ -125,5 +169,5 @@ CC.shape = (() => {
     return f;
   }
 
-  return { openMask, toGrid, resample, removeSpecks, fillHoles, distance };
+  return { openMask, toGrid, resample, removeSpecks, countPieces, joinPieces, fillHoles, distance };
 })();

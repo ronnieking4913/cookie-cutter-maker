@@ -16,7 +16,7 @@
   function readSettings() {
     return {
       bgMode: $("bgMode").value, tolerance: +$("tolerance").value,
-      fill: $("fill").checked, specks: $("specks").checked, smooth: +$("smooth").value,
+      join: $("join").checked, fill: $("fill").checked, specks: $("specks").checked, smooth: +$("smooth").value,
       size: +$("size").value, grow: +$("grow").value, height: +$("height").value, wall: +$("wall").value,
       flangeOn: $("flangeOn").checked, flangeW: +$("flangeW").value, flangeH: +$("flangeH").value,
       res: +$("res").value,

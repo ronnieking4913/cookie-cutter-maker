@@ -35,6 +35,7 @@ Background removal works by color, like GIMP's magic wand. Where part of the cha
 |---|---|---|
 | Background | Automatic | Uses the picture's transparency if it has any, otherwise removes the background by color |
 | Color tolerance | 40 | How different a color can be and still count as background (5–120) |
+| One outline around everything | On | Joins separate pieces (like a paw's toes and pad) into one cookie, filling only the gaps without making it bigger. Turn off for separate cookies, like letters |
 | Fill gaps inside the shape | On | Treats anything enclosed by the outline as part of the cookie |
 | Ignore small specks | On | Drops stray bits smaller than 1% of the main shape |
 | Edge smoothing | 2 | Rounds off jagged edges (0–8) |
@@ -87,7 +88,7 @@ Double-click `tests/index.html`. Each test shows ✓ or ✗, with a total at the
 |---|---|
 | `tests/runner.js` | A small test runner (`test`, `expect(...).toBe`, `toBeCloseTo`, …) plus shared helpers |
 | `tests/background.test.js` | Frame and backdrop removal, rectangular cookies kept, transparency, click to remove |
-| `tests/cutter.test.js` | Size, wall and flange thickness and height, flange off, grow outline, closed mesh, mirroring, empty pictures |
+| `tests/cutter.test.js` | Size, wall and flange thickness and height, flange off, grow outline, one outline around everything, closed mesh, mirroring, empty pictures |
 | `tests/stamp.test.js` | Detail lines found, plate fits inside the cutter, plate and line heights, alignment after mirroring, both objects in one STL |
 
 The tests draw their own pictures. Chrome and Edge won't let a page opened from disk read the pixels of image files beside it, so real photos are checked by hand in the app.
@@ -96,6 +97,7 @@ When fixing a bug, first add a test that shows the bug (it should fail), then fi
 
 ## Known limitations
 
+- **Webbed gaps.** With One outline around everything on, deep notches between pieces (like between toes) are smoothed over.
 - **Stair-stepped edges.** The model is built from grid cells (0.25 mm by default), so edges have tiny steps. They're too small to show up in a print.
 - **Large files.** A detailed cutter with a stamp can reach about 17 MB. Slicers handle that fine; Draft detail makes it about 2.5 times smaller.
 - **Single-color backgrounds only.** Busy or photographed backgrounds may need clicking to clean up, or editing the picture first.

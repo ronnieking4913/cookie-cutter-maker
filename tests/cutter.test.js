@@ -103,8 +103,36 @@
       }
       return n;
     };
-    expect(pieces(build(twoParts(), { grow: 0 }))).toBe(2, "pieces without grow:");
-    expect(pieces(build(twoParts(), { grow: 1 }))).toBe(1, "pieces with 1 mm grow:");
+    expect(pieces(build(twoParts(), { grow: 0, join: false }))).toBe(2, "pieces without grow:");
+    expect(pieces(build(twoParts(), { grow: 1, join: false }))).toBe(1, "pieces with 1 mm grow:");
+  });
+
+  // A paw print: a big pad and four toes, all separate, with clear gaps between them.
+  const paw = () => picture(500, 500, g => {
+    g.fillStyle = "#6b0f24";
+    g.beginPath(); g.ellipse(250, 340, 130, 110, 0, 0, Math.PI * 2); g.fill();
+    for (const [x, y] of [[90, 190], [190, 110], [310, 110], [410, 190]]) {
+      g.beginPath(); g.ellipse(x, y, 48, 62, 0, 0, Math.PI * 2); g.fill();
+    }
+  });
+  const cookiePieces = r => CC.shape.countPieces(Uint8Array.from(r.kind, k => (k === CC.cutter.KIND.COOKIE ? 1 : 0)), r.w, r.h);
+
+  test("One outline around everything turns a paw's toes and pad into one cookie", () => {
+    expect(cookiePieces(build(paw(), { join: false }))).toBe(5, "pieces when off:");
+    expect(cookiePieces(build(paw(), { join: true }))).toBe(1, "pieces when on:");
+  });
+
+  test("One outline around everything doesn't make the cookie bigger", () => {
+    const off = CC.cutter.footprint(build(paw(), { join: false }));
+    const on = CC.cutter.footprint(build(paw(), { join: true }));
+    expect(on.width).toBeCloseTo(off.width, 0.5, "width (mm):");
+    expect(on.depth).toBeCloseTo(off.depth, 0.5, "depth (mm):");
+  });
+
+  test("the joined paw cutter is still a closed, printable mesh", async () => {
+    const mesh = await checkMesh(CC.stl.build(build(paw(), { join: true })).blob);
+    expect(mesh.openEdges).toBe(0, "open edges:");
+    expect(mesh.badNormals).toBe(0, "inward-facing triangles:");
   });
 
   test("an empty picture gives a clear error instead of a broken file", () => {

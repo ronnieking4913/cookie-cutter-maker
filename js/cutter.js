@@ -3,12 +3,15 @@ window.CC = window.CC || {};
 
 CC.cutter = (() => {
   const KIND = { NONE: 0, COOKIE: 1, WALL: 2, FLANGE: 3 };
+  const MAX_JOIN_GAP = 30; // widest gap "One outline around everything" will bridge, mm
 
   // mask: cleaned shape mask (full photo size, W x H). o: settings in mm.
   function build(mask, W, H, o) {
     o = { ...o, flangeH: Math.min(o.flangeH, o.height) };
-    const { m, w, h, t } = CC.shape.toGrid(mask, W, H, o);
+    const grid = CC.shape.toGrid(mask, W, H, o), { w, h, t } = grid;
+    let m = grid.m;
     if (o.specks) CC.shape.removeSpecks(m, w, h);
+    if (o.join) m = CC.shape.joinPieces(m, w, h, MAX_JOIN_GAP / 2 / o.res);
     if (o.fill) CC.shape.fillHoles(m, w, h);
     const d = CC.shape.distance(m, w, h);
 

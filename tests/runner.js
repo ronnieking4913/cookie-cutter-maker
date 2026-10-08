@@ -31,7 +31,7 @@ const T = (() => {
 
   // Default settings, same as the page's defaults. Override any of them per test.
   const settings = over => ({
-    bgMode: "auto", tolerance: 40, fill: true, specks: true, smooth: 2,
+    bgMode: "auto", tolerance: 40, join: true, fill: true, specks: true, smooth: 2,
     size: 80, grow: 0, height: 15, wall: 1.2, flangeOn: true, flangeW: 4, flangeH: 1.6, res: 0.25,
     stampOn: false, sensitivity: 50, lineW: 1.2, lineH: 2, ...over,
   });
