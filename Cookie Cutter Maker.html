@@ -97,6 +97,7 @@
       <h3>Picture</h3>
       <div class="toolbar">
         <button class="ghost small" id="undo" type="button" title="Undo the last click or drag (also right-click on the picture, or Ctrl+Z)">↶ Undo</button>
+        <button class="ghost small" id="redo" type="button" title="Redo what you just undid (also Ctrl+Y)">↷ Redo</button>
         <button class="ghost small" id="resetBg" type="button" title="Undo all clicks and drags">Reset background</button>
         <button class="ghost small" id="savePicture" type="button" title="Saves the picture with the background removed, as a PNG. Load it again later to get the same outline.">Save picture</button>
       </div>
@@ -124,6 +125,7 @@
 </main>
 
 <script src="js/background.js"></script>
+<script src="js/history.js"></script>
 <script src="js/shape.js"></script>
 <script src="js/cutter.js"></script>
 <script src="js/stamp.js"></script>

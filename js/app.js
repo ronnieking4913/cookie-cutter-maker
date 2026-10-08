@@ -7,8 +7,8 @@
     px: null,        // photo pixels (CC.background.readPixels)
     strength: null,  // how sharp the color change is at each pixel, for stamp lines
     removed: null,   // 1 = background pixel
-    strokes: [],     // each click or drag on the picture: a list of [x, y] spots removed.
-                     // Replayed when tolerance changes; right-click undoes the last one.
+    history: CC.history.create(), // clicks and drags on the picture, with undo and redo.
+                                  // Replayed when tolerance changes.
     mask: null,      // 1 = cookie shape
     result: null,    // latest cutter (CC.cutter.build)
     stamp: null,     // latest stamp (CC.stamp.build), or null when the stamp is off
@@ -35,8 +35,10 @@
     if (o.specks) CC.shape.removeSpecks(m, px.W, px.H);
     state.mask = m;
     CC.preview.photo($("photo"), px, m);
-    // Undo and Reset only do something after a click or drag on the picture
-    $("undo").disabled = $("resetBg").disabled = !state.strokes.length || usesAlpha(o);
+    // Undo, Redo and Reset are greyed out when there's nothing for them to do
+    const editable = !usesAlpha(o);
+    $("undo").disabled = $("resetBg").disabled = !(editable && state.history.canUndo());
+    $("redo").disabled = !(editable && state.history.canRedo());
   }
 
   // ---- background (re-run when the photo, mode or tolerance changes) ----
@@ -44,7 +46,7 @@
     const o = readSettings(), px = state.px;
     if (usesAlpha(o)) state.removed = new Uint8Array(px.W * px.H);
     else {
-      state.removed = CC.background.replay(px, o.tolerance, state.strokes);
+      state.removed = CC.background.replay(px, o.tolerance, state.history.strokes());
     }
     refreshMask();
     $("photoHint").textContent = usesAlpha(o)
@@ -89,7 +91,7 @@
   function loadImage(img, name) {
     state.px = CC.background.readPixels(img);
     state.strength = null;
-    state.name = name; state.strokes = [];
+    state.name = name; state.history.clear();
     updateBackground();
   }
 
@@ -194,7 +196,7 @@
   photo.addEventListener("pointermove", e => { if (stroke) removeAlong(e); });
   const finishStroke = () => {
     if (!stroke) return;
-    if (stroke.length) state.strokes.push(stroke);
+    if (stroke.length) state.history.add(stroke);
     stroke = null; last = null;
     if (frame) { cancelAnimationFrame(frame); frame = 0; } // don't let a late quick preview cover the final one
     refreshMask();
@@ -203,20 +205,26 @@
   photo.addEventListener("pointerup", finishStroke);
   photo.addEventListener("pointercancel", finishStroke);
 
-  // Undo the last click or drag: right-click on the picture, or Ctrl+Z.
+  // Undo the last click or drag (button, right-click on the picture, or Ctrl+Z),
+  // and redo it again (button, Ctrl+Y or Ctrl+Shift+Z).
   function undo() {
-    if (!state.strokes.length || usesAlpha(readSettings())) return;
-    state.strokes.pop();
+    if (usesAlpha(readSettings()) || !state.history.undo()) return;
+    updateBackground();
+  }
+  function redo() {
+    if (usesAlpha(readSettings()) || !state.history.redo()) return;
     updateBackground();
   }
   photo.addEventListener("contextmenu", e => { e.preventDefault(); undo(); });
   document.addEventListener("keydown", e => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !/INPUT|SELECT/.test(document.activeElement.tagName)) {
-      e.preventDefault(); undo();
-    }
+    if (!(e.ctrlKey || e.metaKey) || /INPUT|SELECT/.test(document.activeElement.tagName)) return;
+    const key = e.key.toLowerCase();
+    if (key === "y" || (key === "z" && e.shiftKey)) { e.preventDefault(); redo(); }
+    else if (key === "z") { e.preventDefault(); undo(); }
   });
   $("undo").addEventListener("click", undo);
-  $("resetBg").addEventListener("click", () => { state.strokes = []; updateBackground(); });
+  $("redo").addEventListener("click", redo);
+  $("resetBg").addEventListener("click", () => { state.history.clear(); updateBackground(); });
 
   const drop = $("drop");
   drop.addEventListener("click", () => $("file").click());

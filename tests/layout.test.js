@@ -49,7 +49,7 @@
     });
   }
 
-  test("the picture's Undo / Reset / Save buttons fit the panel, even when it's narrow", () => {
+  test("the picture's Undo / Redo / Reset / Save buttons fit the panel, even when it's narrow", () => {
     for (const width of [470, 300]) {
       const s = build(`
         <section class="view" style="height:400px;width:${width}px">
@@ -57,6 +57,7 @@
             <h3>Picture</h3>
             <div class="toolbar">
               <button class="ghost small" type="button">↶ Undo</button>
+              <button class="ghost small" type="button">↷ Redo</button>
               <button class="ghost small" type="button">Reset background</button>
               <button class="ghost small" type="button">Save picture</button>
             </div>

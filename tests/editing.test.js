@@ -38,6 +38,48 @@
     expect(different).toBe(0, "pixels different after undo:");
   });
 
+  const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+
+  test("redo puts back exactly what undo took away", () => {
+    const px = CC.background.readPixels(letters()), history = CC.history.create();
+    history.add([[80, 80]]);
+    history.add(CC.background.removeAlongLine(px, CC.background.replay(px, 40, history.strokes()), [160, 80], [380, 80], 40));
+    const edited = CC.background.replay(px, 40, history.strokes());
+    expect(history.undo()).toBe(true, "undo worked:");
+    expect(history.canRedo()).toBe(true, "redo available:");
+    expect(same(CC.background.replay(px, 40, history.strokes()), edited)).toBe(false, "undo changed the picture:");
+    expect(history.redo()).toBe(true, "redo worked:");
+    expect(same(CC.background.replay(px, 40, history.strokes()), edited)).toBe(true, "back to the edited picture:");
+  });
+
+  test("several undos can be redone in order", () => {
+    const history = CC.history.create();
+    history.add(["a"]); history.add(["b"]); history.add(["c"]);
+    history.undo(); history.undo();
+    expect(history.strokes().join()).toBe("a", "after two undos:");
+    history.redo();
+    expect(history.strokes().join()).toBe("a,b", "after one redo:");
+    history.redo();
+    expect(history.strokes().join()).toBe("a,b,c", "after two redos:");
+    expect(history.canRedo()).toBe(false, "nothing left to redo:");
+  });
+
+  test("a new click or drag after undo clears redo (like any editor)", () => {
+    const history = CC.history.create();
+    history.add(["a"]); history.add(["b"]);
+    history.undo();
+    history.add(["new"]);
+    expect(history.canRedo()).toBe(false, "redo available:");
+    expect(history.strokes().join()).toBe("a,new", "strokes:");
+  });
+
+  test("Reset background and loading a new picture clear both undo and redo", () => {
+    const history = CC.history.create();
+    history.add(["a"]); history.add(["b"]); history.undo();
+    history.clear();
+    expect(history.canUndo() || history.canRedo()).toBe(false, "anything left to undo or redo:");
+  });
+
   test("replaying the clicks and drags gives the same result as doing them live", () => {
     const px = CC.background.readPixels(letters()), live = CC.background.autoRemove(px, 40);
     const strokes = [CC.background.removeAlongLine(px, live, [20, 80], [180, 80], 40), [[300, 80]]];

@@ -8,7 +8,7 @@ It replaces a manual workflow of tracing the outline in GIMP (alpha to selection
 
 Double-click `Cookie Cutter Maker.html` to open it in Edge or Chrome.
 
-1. **Picture.** Choose or drag in a picture (PNG, JPG, WEBP or AVIF). The background is removed automatically and the preview shows what was kept over a checkerboard. Click leftover background to remove it, or click and drag across several pieces (like writing) to remove them in one go. The buttons above the picture: **Undo** the last click or drag (also right-click, or Ctrl+Z), **Reset background** to start over, and **Save picture** to keep the cleaned-up picture as a PNG with a transparent background; load it again later to get the same outline without redoing the cleanup.
+1. **Picture.** Choose or drag in a picture (PNG, JPG, WEBP or AVIF). The background is removed automatically and the preview shows what was kept over a checkerboard. Click leftover background to remove it, or click and drag across several pieces (like writing) to remove them in one go. The buttons above the picture: **Undo** the last click or drag (also right-click, or Ctrl+Z), **Redo** what you undid (also Ctrl+Y), **Reset background** to start over, and **Save picture** to keep the cleaned-up picture as a PNG with a transparent background; load it again later to get the same outline without redoing the cleanup.
 2. **Size.** Set the longest side of the cookie and the cutter's height, wall and rim.
 3. **Stamp** (optional). Adds a plate with raised lines that prints the picture's inside details into the dough.
 4. **Save.** **Download STL** saves `<name>-cutter.stl`, or `<name>-cutter-and-stamp.stl` with the stamp as a second object beside the cutter.
@@ -70,6 +70,7 @@ picture → background.js → shape.js → cutter.js ─┬→ stl.js → .stl f
 | `Cookie Cutter Maker.html` | The page and its controls (open this to use the app) |
 | `styles.css` | The look, with light and dark themes |
 | `js/background.js` | Reads the picture and removes the background |
+| `js/history.js` | Undo and redo for clicks and drags on the picture |
 | `js/shape.js` | Cleans up the shape and puts it on the millimeter grid |
 | `js/cutter.js` | Works out the cutting wall and rim |
 | `js/stamp.js` | Builds the optional stamp plate and detail lines |
@@ -88,7 +89,7 @@ Double-click `tests/index.html`. Each test shows ✓ or ✗, with a total at the
 |---|---|
 | `tests/runner.js` | A small test runner (`test`, `expect(...).toBe`, `toBeCloseTo`, …) plus shared helpers |
 | `tests/background.test.js` | Frame and backdrop removal, rectangular cookies kept, transparency, click to remove |
-| `tests/editing.test.js` | Drag to remove several pieces, quick drags, undo, replaying edits, saved picture loads back the same |
+| `tests/editing.test.js` | Drag to remove several pieces, quick drags, undo, redo, replaying edits, saved picture loads back the same |
 | `tests/cutter.test.js` | Size, wall and rim thickness and height, rim off, grow outline, one outline around everything, closed mesh, mirroring, empty pictures |
 | `tests/stamp.test.js` | Detail lines found, gaps pressed in, no tiny specks, plate fits inside the cutter, plate and line heights, alignment after mirroring, both objects in one STL |
 | `tests/layout.test.js` | Long file names, hidden settings, tall/wide/small pictures fitting their panel, picture buttons fitting, toggle switches (builds pieces of the page with the real stylesheet) |
