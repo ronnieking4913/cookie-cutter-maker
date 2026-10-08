@@ -1,0 +1,6 @@
+# Windows / OneDrive clutter
+desktop.ini
+Thumbs.db
+
+# Generated 3D files
+*.stl

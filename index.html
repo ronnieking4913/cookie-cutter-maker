@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cookie Cutter Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <h1>Cookie Cutter Maker</h1>
+  <p>Drop in a picture, check the outline, download a printable STL.</p>
+</header>
+
+<main class="layout">
+  <!-- Controls -->
+  <aside class="controls">
+    <section class="step">
+      <h2><span class="num">1</span>Picture</h2>
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose a picture">
+        <img id="thumb" alt="" hidden>
+        <div>
+          <strong>Choose a picture</strong>
+          <span>or drag one here</span>
+          <span id="fname" class="fname">Showing a sample heart</span>
+        </div>
+      </div>
+      <input type="file" id="file" accept="image/*" hidden>
+
+      <label class="field" for="bgMode"><span>Background</span>
+        <select id="bgMode">
+          <option value="auto">Automatic</option>
+          <option value="color">Remove by color</option>
+          <option value="alpha">Already transparent</option>
+        </select>
+      </label>
+      <label class="field" for="tolerance"><span>Color tolerance <output id="tolVal">40</output></span>
+        <input type="range" id="tolerance" min="5" max="120" value="40">
+      </label>
+      <button class="ghost" id="resetBg" type="button">Reset background</button>
+
+      <div id="cleanup" class="checks">
+        <label><input type="checkbox" id="fill" checked> Fill gaps inside the shape</label>
+        <label><input type="checkbox" id="specks" checked> Ignore small specks</label>
+        <label class="field" for="smooth"><span>Edge smoothing</span><input type="range" id="smooth" min="0" max="8" value="2"></label>
+      </div>
+    </section>
+
+    <section class="step" id="sizeControls">
+      <h2><span class="num">2</span>Size</h2>
+      <div class="grid2">
+        <label class="field" for="size"><span>Longest side</span><span class="unit"><input type="number" id="size" value="80" min="10" max="300" step="1"><i>mm</i></span></label>
+        <label class="field" for="height"><span>Height</span><span class="unit"><input type="number" id="height" value="15" min="3" max="60" step="0.5"><i>mm</i></span></label>
+        <label class="field" for="wall"><span>Wall</span><span class="unit"><input type="number" id="wall" value="1.2" min="0.4" max="5" step="0.1"><i>mm</i></span></label>
+        <label class="field" for="grow"><span>Grow outline</span><span class="unit"><input type="number" id="grow" value="0" min="0" max="10" step="0.1"><i>mm</i></span></label>
+      </div>
+      <label class="toggle"><input type="checkbox" id="flangeOn" checked> Grip flange</label>
+      <div class="grid2">
+        <label class="field" for="flangeW"><span>Flange width</span><span class="unit"><input type="number" id="flangeW" value="4" min="0.5" max="15" step="0.5"><i>mm</i></span></label>
+        <label class="field" for="flangeH"><span>Flange thickness</span><span class="unit"><input type="number" id="flangeH" value="1.6" min="0.4" max="10" step="0.2"><i>mm</i></span></label>
+      </div>
+      <label class="field" for="res"><span>Detail</span>
+        <select id="res"><option value="0.15">Fine · 0.15 mm</option><option value="0.25" selected>Normal · 0.25 mm</option><option value="0.4">Draft · 0.4 mm</option></select>
+      </label>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">3</span>Stamp <small>optional</small></h2>
+      <label class="toggle"><input type="checkbox" id="stampOn"> Add a stamp for the inside details</label>
+      <div id="stampControls" class="stack" hidden>
+        <p class="hint">Adds a second object to the STL: a plate that fits inside the cutter. After cutting, press it down inside the cutter to print the picture's lines into the dough.</p>
+        <label class="field" for="sensitivity"><span>Detail sensitivity <output id="sensVal">50</output></span>
+          <input type="range" id="sensitivity" min="1" max="100" value="50">
+        </label>
+        <div class="grid2">
+          <label class="field" for="lineW"><span>Line width</span><span class="unit"><input type="number" id="lineW" value="1.2" min="0.6" max="4" step="0.1"><i>mm</i></span></label>
+          <label class="field" for="lineH"><span>Line height</span><span class="unit"><input type="number" id="lineH" value="2" min="0.6" max="6" step="0.2"><i>mm</i></span></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">4</span>Save</h2>
+      <button class="primary" id="save" type="button">Download STL</button>
+      <p class="saved" id="saved"></p>
+      <p class="err" id="err" role="alert" hidden></p>
+    </section>
+  </aside>
+
+  <!-- Previews -->
+  <section class="view">
+    <header><h3>Picture</h3><p id="photoHint" class="hint"></p></header>
+    <div class="checker"><canvas id="photo"></canvas></div>
+  </section>
+
+  <section class="view">
+    <header><h3>Cutter, from above</h3>
+      <ul class="legend">
+        <li><i style="background:var(--wall)"></i>Cutting wall</li>
+        <li><i style="background:var(--flange)"></i>Flange</li>
+        <li><i style="background:var(--dough)"></i>Cookie</li>
+        <li id="stampLegend" hidden><i style="background:var(--stamp)"></i>Stamp lines</li>
+        <li class="muted">Grid: 10 mm</li>
+      </ul>
+    </header>
+    <div class="mat"><canvas id="cutter"></canvas></div>
+    <dl class="stats" id="stats"></dl>
+    <p class="hint">Print the cutter flange-down and the stamp plate-down. Both are mirrored, because you flip them over to use them, so the cookie matches the picture.</p>
+  </section>
+</main>
+
+<script src="js/background.js"></script>
+<script src="js/shape.js"></script>
+<script src="js/cutter.js"></script>
+<script src="js/stamp.js"></script>
+<script src="js/stl.js"></script>
+<script src="js/preview.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
