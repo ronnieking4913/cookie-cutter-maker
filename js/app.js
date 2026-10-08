@@ -42,9 +42,7 @@
     const o = readSettings(), px = state.px;
     if (usesAlpha(o)) state.removed = new Uint8Array(px.W * px.H);
     else {
-      state.removed = CC.background.autoRemove(px, o.tolerance);
-      for (const stroke of state.strokes)
-        for (const [x, y] of stroke) CC.background.removeAt(px, state.removed, x, y, o.tolerance);
+      state.removed = CC.background.replay(px, o.tolerance, state.strokes);
     }
     refreshMask();
     $("photoHint").textContent = usesAlpha(o)
@@ -125,13 +123,27 @@
       const parts = state.stamp ? [state.result, state.stamp] : [state.result];
       const { blob, count } = CC.stl.build(parts);
       const file = `${state.name}-${state.stamp ? "cutter-and-stamp" : "cutter"}.stl`;
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = file;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      download(blob, file);
       btn.disabled = false; btn.textContent = label;
       $("saved").textContent = `Saved ${file} · ${(blob.size / 1e6).toFixed(1)} MB · ${count.toLocaleString()} triangles`;
     }, 30);
+  }
+
+  // The picture as edited (background removed), as a PNG with a transparent background.
+  // Loading it again later gives the same outline, since the app uses its transparency.
+  function savePicture() {
+    CC.preview.photo(document.createElement("canvas"), state.px, state.mask).toBlob(blob => {
+      const file = `${state.name}-edited.png`;
+      download(blob, file);
+      $("saved").textContent = `Saved ${file}`;
+    }, "image/png");
+  }
+
+  function download(blob, file) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = file;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   }
 
   // ---- wiring ----
@@ -158,18 +170,11 @@
 
   let stroke = null, last = null, frame = 0;
 
-  // Remove whatever is under the pointer, plus every spot along the way since the last
-  // position, so a quick drag doesn't skip pieces.
+  // Remove whatever is under the pointer, plus everything along the way since the last position.
   function removeAlong(e) {
     const spot = pictureSpot(e);
     if (!spot) { last = null; return; }
-    const from = last || spot, steps = Math.max(1, Math.ceil(Math.hypot(spot[0] - from[0], spot[1] - from[1]) / 2));
-    for (let s = 1; s <= steps; s++) {
-      const x = Math.round(from[0] + (spot[0] - from[0]) * s / steps), y = Math.round(from[1] + (spot[1] - from[1]) * s / steps);
-      if (state.removed[y * state.px.W + x]) continue; // already background
-      stroke.push([x, y]);
-      CC.background.removeAt(state.px, state.removed, x, y, +$("tolerance").value);
-    }
+    stroke.push(...CC.background.removeAlongLine(state.px, state.removed, last || spot, spot, +$("tolerance").value));
     last = spot;
     // quick preview while dragging; the full clean-up and cutter happen when the button is released
     if (!frame) frame = requestAnimationFrame(() => {
@@ -218,6 +223,7 @@
   ["dragleave", "drop"].forEach(t => document.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
   document.addEventListener("drop", e => loadFile(e.dataTransfer.files[0]));
   $("save").addEventListener("click", save);
+  $("savePicture").addEventListener("click", savePicture);
 
   loadImage(sampleHeart(), "heart");
 })();

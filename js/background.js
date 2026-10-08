@@ -100,6 +100,28 @@ CC.background = (() => {
     flood(px, removed, [i], tol);
   }
 
+  // Dragging: remove whatever lies along the line from one pointer position to the next,
+  // checking every 2 px so a quick drag doesn't skip pieces. Returns the spots it removed from,
+  // so the drag can be replayed later.
+  function removeAlongLine(px, removed, from, to, tol) {
+    const spots = [], steps = Math.max(1, Math.ceil(Math.hypot(to[0] - from[0], to[1] - from[1]) / 2));
+    for (let s = 0; s <= steps; s++) {
+      const x = Math.round(from[0] + (to[0] - from[0]) * s / steps), y = Math.round(from[1] + (to[1] - from[1]) * s / steps);
+      if (removed[y * px.W + x]) continue; // already background
+      spots.push([x, y]);
+      removeAt(px, removed, x, y, tol);
+    }
+    return spots;
+  }
+
+  // Background from scratch: automatic removal plus every click or drag (stroke) the user made.
+  // Undo is replaying without the last stroke.
+  function replay(px, tol, strokes) {
+    const removed = autoRemove(px, tol);
+    for (const stroke of strokes) for (const [x, y] of stroke) removeAt(px, removed, x, y, tol);
+    return removed;
+  }
+
   // 1 = part of the cookie shape, 0 = background.
   function shapeMask(px, removed, useAlpha) {
     const n = px.W * px.H, m = new Uint8Array(n);
@@ -107,5 +129,5 @@ CC.background = (() => {
     return m;
   }
 
-  return { readPixels, autoRemove, removeAt, shapeMask };
+  return { readPixels, autoRemove, removeAt, removeAlongLine, replay, shapeMask };
 })();

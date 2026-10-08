@@ -9,13 +9,13 @@ It replaces a manual workflow of tracing the outline in GIMP (alpha to selection
 Double-click `Cookie Cutter Maker.html` to open it in Edge or Chrome.
 
 1. **Picture.** Choose or drag in a picture (PNG, JPG, WEBP or AVIF). The background is removed automatically and the preview shows what was kept over a checkerboard. Click leftover background to remove it, or click and drag across several pieces (like writing) to remove them in one go. **Right-click** (or Ctrl+Z) undoes the last click or drag; **Reset background** starts over.
-2. **Size.** Set the longest side of the cookie and the cutter's height, wall and flange.
+2. **Size.** Set the longest side of the cookie and the cutter's height, wall and rim.
 3. **Stamp** (optional). Adds a plate with raised lines that prints the picture's inside details into the dough.
-4. **Save.** **Download STL** saves `<name>-cutter.stl`, or `<name>-cutter-and-stamp.stl` with the stamp as a second object beside the cutter.
+4. **Save.** **Download STL** saves `<name>-cutter.stl`, or `<name>-cutter-and-stamp.stl` with the stamp as a second object beside the cutter. **Save edited picture (PNG)** saves the cleaned-up picture with a transparent background; load it again later to get the same outline without redoing the cleanup.
 
 ### Printing
 
-- Print the cutter **flange-down** and the stamp **plate-down** (lines facing up).
+- Print the cutter **rim-side down** and the stamp **flat side down** (lines facing up).
 - Both objects are **mirrored** on purpose. You flip them over to use them, so the cookie comes out matching the picture.
 - To move or print the two objects separately, use your slicer's **Split to objects** (Cura, PrusaSlicer, Bambu Studio).
 - To use the stamp: cut the cookie, leave the cutter in place, press the stamp down inside it, then lift both off.
@@ -39,11 +39,11 @@ Background removal works by color, like GIMP's magic wand. Where part of the cha
 | Fill gaps inside the shape | On | Treats anything enclosed by the outline as part of the cookie |
 | Ignore small specks | On | Drops stray bits smaller than 1% of the main shape |
 | Edge smoothing | 2 | Rounds off jagged edges (0–8) |
-| Longest side | 80 mm | Size of the cookie itself, not including wall and flange |
+| Longest side | 80 mm | Size of the cookie itself, not including wall and rim |
 | Height | 15 mm | Height of the cutting wall |
 | Wall | 1.2 mm | Thickness of the cutting wall |
 | Grow outline | 0 mm | Expands the shape before adding the wall; joins pieces that are close together |
-| Grip flange | On, 4 mm wide, 1.6 mm thick | The wider rim you press on |
+| Rim to push on | On, 4 mm wide, 1.6 mm thick | A wider, flat edge around the top of the cutter, so it's comfortable to press down on (called the "flange" in the code) |
 | Detail | Normal (0.25 mm) | Grid size: Fine 0.15 mm, Normal 0.25 mm, Draft 0.4 mm |
 | Stamp: detail sensitivity | 50 | Higher picks up fainter lines (1–100) |
 | Stamp: line width / height | 1.2 mm / 2 mm | Size of the raised lines on the stamp |
@@ -59,7 +59,7 @@ picture → background.js → shape.js → cutter.js ─┬→ stl.js → .stl f
 
 1. **Background** (`js/background.js`). Floods inward from the picture's edges, removing pixels close in color to the edge. While what's left is still a solid rectangle (for example a colored backdrop inside a white frame), it removes the next layer too. It stops if a layer would remove almost everything, which means that layer is the cookie itself.
 2. **Shape** (`js/shape.js`). Removes thin halos and specks, crops to the shape, and scales it onto a millimeter grid.
-3. **Cutter** (`js/cutter.js`). Measures every grid cell's distance from the shape (exact Euclidean distance transform). Cells within the wall distance become wall; cells within the flange distance become flange.
+3. **Cutter** (`js/cutter.js`). Measures every grid cell's distance from the shape (exact Euclidean distance transform). Cells within the wall distance become wall; cells within the rim distance become rim (flange).
 4. **Stamp** (`js/stamp.js`). Finds detail lines where the color changes sharply inside the shape (Sobel edge detection) and thickens them to the line width. It also raises the gaps that were filled in to make one outline (like the spaces between a paw's toes and pad), so the cookie keeps those details. Everything sits on a plate inset from the cutter wall.
 5. **STL** (`js/stl.js`). Turns each raised cell into a block, keeps only the outside faces, mirrors left to right, and writes a binary STL. The mesh is closed, and every face points outwards.
 
@@ -71,7 +71,7 @@ picture → background.js → shape.js → cutter.js ─┬→ stl.js → .stl f
 | `styles.css` | The look, with light and dark themes |
 | `js/background.js` | Reads the picture and removes the background |
 | `js/shape.js` | Cleans up the shape and puts it on the millimeter grid |
-| `js/cutter.js` | Works out the cutting wall and flange |
+| `js/cutter.js` | Works out the cutting wall and rim |
 | `js/stamp.js` | Builds the optional stamp plate and detail lines |
 | `js/stl.js` | Writes the 3D file |
 | `js/preview.js` | Draws the picture and cutter previews |
@@ -88,8 +88,10 @@ Double-click `tests/index.html`. Each test shows ✓ or ✗, with a total at the
 |---|---|
 | `tests/runner.js` | A small test runner (`test`, `expect(...).toBe`, `toBeCloseTo`, …) plus shared helpers |
 | `tests/background.test.js` | Frame and backdrop removal, rectangular cookies kept, transparency, click to remove |
-| `tests/cutter.test.js` | Size, wall and flange thickness and height, flange off, grow outline, one outline around everything, closed mesh, mirroring, empty pictures |
+| `tests/editing.test.js` | Drag to remove several pieces, quick drags, undo, replaying edits, saved picture loads back the same |
+| `tests/cutter.test.js` | Size, wall and rim thickness and height, rim off, grow outline, one outline around everything, closed mesh, mirroring, empty pictures |
 | `tests/stamp.test.js` | Detail lines found, gaps pressed in, plate fits inside the cutter, plate and line heights, alignment after mirroring, both objects in one STL |
+| `tests/layout.test.js` | Long file names, hidden settings, tall/wide/small pictures fitting their panel, toggle switches (builds pieces of the page with the real stylesheet) |
 
 The tests draw their own pictures. Chrome and Edge won't let a page opened from disk read the pixels of image files beside it, so real photos are checked by hand in the app.
 

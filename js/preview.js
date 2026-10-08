@@ -10,12 +10,14 @@ CC.preview = (() => {
   }
 
   // Background pixels become transparent, so the checkerboard behind the canvas shows through.
+  // Also used to save the edited picture as a PNG (with a new canvas).
   function photo(canvas, px, mask) {
     canvas.width = px.W; canvas.height = px.H;
     const g = canvas.getContext("2d"), img = g.createImageData(px.W, px.H);
     img.data.set(px.data);
     for (let i = 0; i < mask.length; i++) if (!mask[i]) img.data[i * 4 + 3] = 0;
     g.putImageData(img, 0, 0);
+    return canvas;
   }
 
   // stamp is optional; when given, its raised lines are drawn on the cookie.
